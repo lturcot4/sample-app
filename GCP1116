@@ -1,0 +1,99 @@
+Running a Dedicated Ethereum RPC Node in Google Cloud
+
+
+export ZONE=
+export REGION=
+
+***********************************
+
+
+# Set variables
+NAME="eth-mainnet-rpc-ip"
+TIER="PREMIUM"
+
+# Create a public static IP address
+gcloud compute addresses create $NAME \
+    --region=$REGION \
+    --network-tier=$TIER
+
+
+*********************************
+
+# Variables
+FIREWALL_RULE_NAME="eth-rpc-node-fw"
+NETWORK="default"
+PRIORITY=1000
+DIRECTION="INGRESS"
+ACTION="ALLOW"
+TARGET_TAGS="eth-rpc-node"
+SOURCE_RANGES="0.0.0.0/0"
+
+# Create firewall rule
+gcloud compute firewall-rules create $FIREWALL_RULE_NAME \
+    --network $NETWORK \
+    --priority $PRIORITY \
+    --direction $DIRECTION \
+    --action $ACTION \
+    --target-tags $TARGET_TAGS \
+    --source-ranges $SOURCE_RANGES \
+    --rules "tcp:30303,tcp:9000,tcp:8545,udp:30303,udp:9000"
+
+
+********************************
+
+# Set variables
+SERVICE_ACCOUNT_NAME="eth-rpc-node-sa"
+SERVICE_ACCOUNT_ID="eth-rpc-node-sa"
+PROJECT_ID=$(gcloud config get-value project)
+
+# Create the service account
+gcloud iam service-accounts create $SERVICE_ACCOUNT_NAME \
+    --display-name=$SERVICE_ACCOUNT_NAME
+
+# Assign roles to the service account
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member="serviceAccount:$SERVICE_ACCOUNT_ID@$PROJECT_ID.iam.gserviceaccount.com" \
+    --role="roles/compute.osLogin"
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member="serviceAccount:$SERVICE_ACCOUNT_ID@$PROJECT_ID.iam.gserviceaccount.com" \
+    --role="roles/servicemanagement.serviceController"
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member="serviceAccount:$SERVICE_ACCOUNT_ID@$PROJECT_ID.iam.gserviceaccount.com" \
+    --role="roles/logging.logWriter"
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member="serviceAccount:$SERVICE_ACCOUNT_ID@$PROJECT_ID.iam.gserviceaccount.com" \
+    --role="roles/monitoring.metricWriter"
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member="serviceAccount:$SERVICE_ACCOUNT_ID@$PROJECT_ID.iam.gserviceaccount.com" \
+    --role="roles/cloudtrace.agent"
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member="serviceAccount:$SERVICE_ACCOUNT_ID@$PROJECT_ID.iam.gserviceaccount.com" \
+    --role="roles/compute.networkUser"
+
+**************************************************
+
+# Set variables
+SNAPSHOT_SCHEDULE_NAME="eth-mainnet-rpc-node-disk-snapshot"
+START_TIME="18:00"  # 6:00 PM UTC
+MAX_RETENTION_DAYS=7
+
+# Create snapshot schedule with daily frequency
+gcloud compute resource-policies create snapshot-schedule $SNAPSHOT_SCHEDULE_NAME \
+    --region=$REGION \
+    --start-time=$START_TIME \
+    --max-retention-days=$MAX_RETENTION_DAYS \
+    --daily-schedule
+
+# Verify the snapshot schedule creation
+gcloud compute resource-policies describe $SNAPSHOT_SCHEDULE_NAME \
+    --region=$REGION
+
+*****************************************************
+
+Thanks SUBSCRIBE NOW !!
+
