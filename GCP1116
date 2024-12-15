@@ -1,10 +1,19 @@
+IMPORTANT
+
+1)First create VM Instance with e2 as shown in video
+2)**Do not check first task**
+3)After checking all other task then delete VM and create new VM as shown in video
+4)At last check Task1 and then end this lab
+
+-----------------------------------------------------
 Running a Dedicated Ethereum RPC Node in Google Cloud
+Lab GSP1116
 
 
 export ZONE=
 export REGION=
 
-***********************************
+*********************************************************
 
 
 # Set variables
